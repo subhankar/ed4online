@@ -14,7 +14,7 @@ $connString = mysql_connect($host,$user,$pass);
 mysql_select_db($dbname,$connString);
 
 	
-echo $sql_std = "SELECT * FROM stu_students WHERE deleted = 0 LIMIT 2001,500";
+echo $sql_std = "SELECT * FROM stu_students WHERE deleted = 0 LIMIT 500,500";
 echo '<BR />';
 $rs_std = mysql_query($sql_std) or mysql_error();
 echo '<BR /><BR />';
@@ -47,9 +47,9 @@ while($dt_std = mysql_fetch_array($rs_std)){
 	$sql_insert.="`team_id`='".$dt_std['team_id']."', ";
 	$sql_insert.="`team_set_id`='".$dt_std['team_set_id']."', ";
 	$sql_insert.="`salutation`='".$dt_std['salutation']."', ";
-	$sql_insert.="`first_name`='".$dt_std['first_name']."', ";
-	$sql_insert.="`last_name`='".$dt_std['last_name']."', ";
-	$sql_insert.="`description`='".$dt_std['description']."', ";
+	$sql_insert.="`first_name`='".addslashes($dt_std['first_name'])."', ";
+	$sql_insert.="`last_name`='".addslashes($dt_std['last_name'])."', ";
+	$sql_insert.="`description`='".addslashes($dt_std['description'])."', ";
 	$sql_insert.="`phone_home`='".$dt_std['phone_home']."', ";
 	$sql_insert.="`phone_mobile`='".$dt_std['phone_mobile']."', ";
 	$sql_insert.="`primary_address_street`='".$dt_std['primary_address']."', ";	
@@ -71,14 +71,23 @@ while($dt_std = mysql_fetch_array($rs_std)){
 	$db->query($con_cust_sql);
 	echo $con_cust_sql;
 	echo '<BR /><BR />';
+	//Get Email id of Student
+	$student = BeanFactory::getBean('stu_Students',$dt_std['id']);
+	$primary_email = $student->emailAddress->getPrimaryAddress($student);	
+	//Set Email id of Contacts
+	$focus = new Contact();
+	$focus->retrieve($con_id);
+	$focus->email1 = $primary_email;
+	$focus->save();
+	echo '<BR /><BR />';
 	//Select from Student Account Table
-	echo $std_acc_sql = "SELECT * FROM stu_students_accounts_c WHERE stu_students_accountsstu_students_ida = '".$dt_std['id']."'";
+	echo $std_acc_sql = "SELECT * FROM accounts_stu_students_1_c WHERE accounts_stu_students_1stu_students_idb = '".$dt_std['id']."'";
 	$rs_std_acc = mysql_query($std_acc_sql) or mysql_error();
 	$dt_std_acc = mysql_fetch_array($rs_std_acc);
 	//stu_students_accounts_c
 	//Insert into Account_Contact Rel Table
 	echo '<BR /><BR />';
-	echo $sql2 = "INSERT INTO accounts_contacts (id,contact_id,account_id) VALUES (uuid(),'".$con_id."','".$dt_std_acc['stu_students_accountsaccounts_idb']."')";
+	echo $sql2 = "INSERT INTO accounts_contacts (id,contact_id,account_id) VALUES (uuid(),'".$con_id."','".$dt_std_acc['accounts_stu_students_1accounts_ida']."')";
 	$db->query($sql2);
 	echo '<BR /><BR />';
 	//Insert into Opprotunity Table
@@ -105,7 +114,7 @@ while($dt_std = mysql_fetch_array($rs_std)){
 	$db->query($opp_cust_sql);
 	echo '<BR /><BR />';
 	//Create Opportunity-Accounts relationship
-	echo $opp_acc_sql = "INSERT INTO accounts_opportunities (id,opportunity_id,account_id) VALUES (uuid(),'".$opp_id."','".$dt_std_acc['stu_students_accountsaccounts_idb']."')";
+	echo $opp_acc_sql = "INSERT INTO accounts_opportunities (id,opportunity_id,account_id) VALUES (uuid(),'".$opp_id."','".$dt_std_acc['accounts_stu_students_1accounts_ida']."')";
 	$db->query($opp_acc_sql);
 	echo '<BR /><BR />';
 	//Create Relation B/w Contacts & Opportunity
