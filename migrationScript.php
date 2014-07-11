@@ -14,7 +14,7 @@ $connString = mysql_connect($host,$user,$pass);
 mysql_select_db($dbname,$connString);
 
 	
-echo $sql_std = "SELECT * FROM stu_students WHERE deleted = 0 LIMIT 2000,500";
+echo $sql_std = "SELECT * FROM stu_students WHERE deleted = 0 LIMIT 0,500";
 echo '<BR />';
 $rs_std = mysql_query($sql_std) or mysql_error();
 echo '<BR /><BR />';
@@ -85,7 +85,6 @@ while($dt_std = mysql_fetch_array($rs_std)){
 	$rs_std_acc = mysql_query($std_acc_sql) or mysql_error();
 	$dt_std_acc = mysql_fetch_array($rs_std_acc);
 	//stu_students_accounts_c
-
 	//Insert into Account_Contact Rel Table
 	echo '<BR /><BR />';
 	echo $sql2 = "INSERT INTO accounts_contacts (id,contact_id,account_id) VALUES (uuid(),'".$con_id."','".$dt_std_acc['accounts_stu_students_1accounts_ida']."')";
@@ -134,7 +133,7 @@ while($dt_std = mysql_fetch_array($rs_std)){
 		$rs_chk = mysql_query($chk_sql);
 		if(mysql_num_rows($rs_chk) > 0){
 			//Update existing record
-			$prod_sql = "UPDATE products_cstm SET end_date_c = '".$dt_std['end_date']."',start_date_c = '".$dt_std['start_date']."',textbook_tracking_c = '".$dt_std['textbook_tracking']."', textbook_po_c = '".$dt_std['textbook_invoice_number']."',extension_order_date_c = '".$dt_std['textbook_ordered']."',extension_cost_c = '".$dt_std_cstm['extension_cost_c']."' WHERE id_c = '".$dt_std_prod['stu_students_products_1products_idb']."'";
+			$prod_sql = "UPDATE products_cstm SET end_date_c = '".$dt_std['end_date']."',start_date_c = '".$dt_std['start_date']."',textbook_tracking_c = '".$dt_std['textbook_tracking']."', textbook_po_c = '".$dt_std['textbook_invoice_number']."',textbook_ordered_c = '".$dt_std['textbook_ordered']."',extension_order_date_c = '".$dt_std_cstm['extension_order_date_c']."',extension_cost_c = '".$dt_std_cstm['extension_cost_c']."' WHERE id_c = '".$dt_std_prod['stu_students_products_1products_idb']."'";
 		}else{
 			//Create new enrty
 			$prod_sql = "INSERT INTO `products_cstm` SET ";	
@@ -143,7 +142,8 @@ while($dt_std = mysql_fetch_array($rs_std)){
 			$prod_sql.="`start_date_c`='".$dt_std['start_date']."', ";
 			$prod_sql.="`textbook_tracking_c`='".$dt_std['textbook_tracking']."', ";
 			$prod_sql.="`textbook_po_c`='".$dt_std['textbook_invoice_number']."', ";
-			$prod_sql.="`extension_order_date_c`='".$dt_std['textbook_ordered']."', ";
+			$prod_sql.="`textbook_ordered_c`='".$dt_std['textbook_ordered']."', ";
+			$prod_sql.="`extension_order_date_c`='".$dt_std_cstm['extension_order_date_c']."', ";
 			$prod_sql.="`extension_cost_c`='".$dt_std_cstm['extension_cost_c']."' ";
 		}
 		echo $prod_sql;
