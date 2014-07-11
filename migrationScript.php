@@ -14,7 +14,7 @@ $connString = mysql_connect($host,$user,$pass);
 mysql_select_db($dbname,$connString);
 
 	
-echo $sql_std = "SELECT * FROM stu_students WHERE deleted = 0 LIMIT 500,500";
+echo $sql_std = "SELECT * FROM stu_students WHERE deleted = 0 LIMIT 2000,500";
 echo '<BR />';
 $rs_std = mysql_query($sql_std) or mysql_error();
 echo '<BR /><BR />';
@@ -52,11 +52,11 @@ while($dt_std = mysql_fetch_array($rs_std)){
 	$sql_insert.="`description`='".addslashes($dt_std['description'])."', ";
 	$sql_insert.="`phone_home`='".$dt_std['phone_home']."', ";
 	$sql_insert.="`phone_mobile`='".$dt_std['phone_mobile']."', ";
-	$sql_insert.="`primary_address_street`='".$dt_std['primary_address']."', ";	
-	$sql_insert.="`primary_address_city`='".$dt_std['primary_address_city']."', ";
-	$sql_insert.="`primary_address_state`='".$dt_std['primary_address_state']."', ";
+	$sql_insert.="`primary_address_street`='".addslashes($dt_std['primary_address'])."', ";	
+	$sql_insert.="`primary_address_city`='".addslashes($dt_std['primary_address_city'])."', ";
+	$sql_insert.="`primary_address_state`='".addslashes($dt_std['primary_address_state'])."', ";
 	$sql_insert.="`primary_address_postalcode`='".$dt_std['primary_address_postalcode']."', ";	
-	$sql_insert.="`primary_address_country`='".$dt_std['primary_address_country']."' ";
+	$sql_insert.="`primary_address_country`='".addslashes($dt_std['primary_address_country'])."' ";
 	
 	
 	$db->query($sql_insert);
@@ -85,6 +85,7 @@ while($dt_std = mysql_fetch_array($rs_std)){
 	$rs_std_acc = mysql_query($std_acc_sql) or mysql_error();
 	$dt_std_acc = mysql_fetch_array($rs_std_acc);
 	//stu_students_accounts_c
+
 	//Insert into Account_Contact Rel Table
 	echo '<BR /><BR />';
 	echo $sql2 = "INSERT INTO accounts_contacts (id,contact_id,account_id) VALUES (uuid(),'".$con_id."','".$dt_std_acc['accounts_stu_students_1accounts_ida']."')";
