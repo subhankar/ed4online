@@ -281,7 +281,7 @@ function sugarapi_connect($wrapper, $profile, $courses, $user){
     );
 		$set_relationship_result_opps_acc = sugarapi_call("set_relationship", $set_entry_parameters_opps_acc, SUGAR_URL);
 		//$course_data = array("API9","API 12");
-		$product_start_date = $wrapper->field_start_date->value();
+		$product_start_date = date('Y-m-d H:i:s', $wrapper->field_start_date->value());
 		//If Course Data is present
 		if(isset($courses) && (count($courses) > 0)){
 			//Loop Course Data and Create Course / Relationship
