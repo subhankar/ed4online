@@ -50,7 +50,7 @@ while($dt_std = mysql_fetch_array($rs_std)){
 	$sql_insert.="`first_name`='".addslashes($dt_std['first_name'])."', ";
 	$sql_insert.="`last_name`='".addslashes($dt_std['last_name'])."', ";
 	$sql_insert.="`description`='".addslashes($dt_std['description'])."', ";
-	$sql_insert.="`phone_home`='".$dt_std['phone_home']."', ";
+	$sql_insert.="`phone_work`='".$dt_std['phone_work']."', ";
 	$sql_insert.="`phone_mobile`='".$dt_std['phone_mobile']."', ";
 	$sql_insert.="`primary_address_street`='".addslashes($dt_std['primary_address'])."', ";	
 	$sql_insert.="`primary_address_city`='".addslashes($dt_std['primary_address_city'])."', ";
