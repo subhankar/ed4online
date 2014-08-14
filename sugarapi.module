@@ -1,21 +1,12 @@
 <?php
 //define("SUGAR_URL", "https://ed4online.sugarondemand.com/service/v4_1/rest.php");
-define("SUGAR_URL", "http://dipless.dynpro.com/ed4online/service/v4_1/rest.php");
+define("SUGAR_URL", "http://dipless.dynpro.com/ed4onlinenew/service/v4_1/rest.php");
 
-function sugarapi_menu(){
-   $items['sugar_connect'] = array(
-    'title' => 'Post to Sugar',
-    'page callback' => 'sugarapi_retrieve',
-    'access arguments' => array('access content'),
-    'type' => MENU_CALLBACK,
-  );
-  return $items;
-}
 
 function sugarapi_meni_login(){
   $url = SUGAR_URL;
-  $username = "triciaseymour";
-  $password = "Ts0203";
+  $username = "allisonmack";
+  $password = "Amfmack225";
   
   $login_parameters = array(
          "user_auth"=>array(
@@ -29,70 +20,7 @@ function sugarapi_meni_login(){
   $login_result = sugarapi_call("login", $login_parameters, $url);
   return $login_result;
 }
-
-//* This is a callback used for testing different API functions
-function sugarapi_retrieve(){  
-    $login_result = sugarapi_meni_login();
-    $session_id = $login_result->id;    
-        
-    $student_bean = '2d336052-4e4c-574d-0113-52792e01ebbb';
-    $partner_bean = '94597c8b-1a4e-6a20-81d9-51e6d7e764c8'; 
-    $user_bean = 'ca450366-8b31-c2d8-58f2-51bf8a00f891';
-    
-    $get_relationships_parameters = array(
-     //session id
-     'session' => $session_id,
-
-     //The name of the module from which to retrieve records.
-     'module_name' => 'Accounts',
-
-     //The ID of the specified module bean.
-     'module_id' => $partner_bean,
-
-     //The relationship name of the linked field from which to return records.
-     'link_field_name' => 'stu_students_accounts',
-
-     //The portion of the WHERE clause from the SQL statement used to find the related items.
-     'related_module_query' => '',
-
-     //The related fields to be returned.
-     'related_fields' => array(    
-        'first_name',
-        'last_name',
-        'name',    
-        'id',            
-     ),
-
-     //For every related bean returned,
-     //specify link field names to field information.     
-     'related_module_link_name _to_fields_array' => array(),          
-     'deleted'=> 0,     
-     'order_by' => '',     
-     'offset' => 0,
-     'limit' => 100,
-    );
-      
-    $result = sugarapi_call("get_relationships", $get_relationships_parameters, $url);
-    
-    $get_entry_parameters = array(
-     //session id
-     'session' => $session_id,
-
-     //The name of the module from which to retrieve records
-     'module_name' => "stu_Students",
-     'query' => "stu_students.first_name = 'Stephanie'",     
-     'order_by' => "",
-     'offset' => '0',
-
-     'link_name_to_fields_array' => array(),
-     'max_results' => '1',
-     'deleted' => '0',
-     'track_view' => false,
-    );
-    $result = sugarapi_call("get_entry_list", $get_entry_parameters, SUGAR_URL);
-      
-    watchdog('get_entry1','<pre>' . print_r($result,1) . '</pre>');
-}
+ 
 
 
 // Function to make cURL request to create new Student Record from Drupal/Ed4Online Student Registrations
@@ -130,12 +58,20 @@ function sugarapi_call($method, $parameters, $url)
     return $response;
 }
 
-function sugarapi_connect($wrapper, $profile, $courses, $user){
-  $login_result = sugarapi_meni_login();    
-  	echo '<PRE>';
-	//print_r($wrapper);
+function sugarapi_connect($wrapper, $profile, $courses, $user, $account_name, $assigned_to){
+	/*echo '<PRE>';
+	print_r($courses);
 	echo '</PRE>';
-	//die();
+	echo 'Total Cost '.$wrapper->field_total_cost->value();	
+	echo '<BR>';
+	echo 'Program Name '.$wrapper->field_program_name->value();
+	echo '<BR>';
+	die()*/;
+  $login_result = sugarapi_meni_login();    
+    echo '<PRE>';
+  //print_r($wrapper);
+  echo '</PRE>';
+  //die();
   $session_id = $login_result->id;
 
   //Create New Student Record----------------------------------------------
@@ -151,191 +87,239 @@ function sugarapi_connect($wrapper, $profile, $courses, $user){
         }
       } */     
   $extra_info = 'Imported from Website on ' . date(' M jS, Y') . ' - Partner (Drupal user name): ' . $user->name;
-  	//echo '<PRE>';
-	
-	//echo ($wrapper->field_start_date->value());
-//	echo '</PRE>';
-//	die();
+    //echo '<PRE>';
+  
+  //echo ($wrapper->field_start_date->value());
+//  echo '</PRE>';
+//  die();
   if ($wrapper->field_comments->value()){
     $extra_info .= ' - COMMENTS: ' . $wrapper->field_comments->value();  
   }
-    $contact_email = $wrapper->field_email_address->value();
-	//Find Contact by Email Id
-	$contact = sugarapi_get_contact($session_id,$contact_email);
-	$return_id = $contact->records[0]->id->value;
-	
-	if(isset($return_id) && $return_id != ''){
-		echo $contact_id = $return_id;
-		echo 'Found';
-	}else{
-		//Create New Contacts Entry
-		$set_entry_parameters_cont = array(      
-		"session" => $session_id,
-		"module_name" => "Contacts",	
-		//Record attributes
-		"name_value_list" => array(  
-		array("name" => "contact_type_c", "value" => "Student"),
-		array("name" => "status", "value" => "Active Student"), 
-		array("name" => "number_of_courses_c", "value" => count($courses)),
-		array("name" => "currency_id", "value" => "USD"),          
-		array("name" => "primary_address_street", "value" => $profile->commerce_customer_address['und'][0]['thoroughfare'] . $profile->commerce_customer_address['und'][0]['premise']),          
-		array("name" => "primary_address_city", "value" => $profile->commerce_customer_address['und'][0]['locality']),
-		array("name" => "primary_address_state", "value" => $profile->commerce_customer_address['und'][0]['administrative_area']),          
-		array("name" => "primary_address_postalcode", "value" => $profile->commerce_customer_address['und'][0]['postal_code']),          
-		array("name" => "first_name", "value" => $profile->commerce_customer_address['und'][0]['first_name']),
-		array("name" => "last_name", "value" => $profile->commerce_customer_address['und'][0]['last_name']),
-		array("name" => "phone_home", "value" => $profile->field_contact_phone_number['und'][0]['value']),
-		array("name" => "email1", "value" => $wrapper->field_email_address->value()),
-		array("name" => "description", "value" => $extra_info),               
-		),
-		);
-		$set_entry_result_cont = sugarapi_call("set_entry", $set_entry_parameters_cont, SUGAR_URL);
-		$contact_id = $set_entry_result_cont->id;
-		echo 'Not Found';
-	}
-	//die(); 
-	//Find Account
-	$account_name = $wrapper->field_school_s_name->value();
-	$account = sugarapi_get_partner($session_id,$account_name);
-	echo 'xxx<BR>';
-    echo $account_id = $account->records[0]->id->value;
-	//die();
+  
+  /*
+     * Contact Assigned_To logic
+     * Look up assigned_to user
+     */
+    
+
+  
+    // If the assigned_to variable isn't set then let's give it the defaults
+    if (!$assigned_to){$assigned_to = array(0 => 'Allison', 1 => 'Mack');}    
+
+    // Look up the Employee User ID
+    $user_id = sugarapi_get_user($session_id, $assigned_to[0], $assigned_to[1]);
+    if (!$user_id){
+      //assign default of Allison Mack if not match returned
+      $user_id = 'ca450366-8b31-c2d8-58f2-51bf8a00f891';
+    }
+    // The $user_id contains the bean of the 'assigned_to' record in Sugar
+ 
+
+  $contact_email = $wrapper->field_email_address->value();
+  //Find Contact by Email Id
+  $contact = sugarapi_get_contact($session_id,$contact_email);
+  $return_id = $contact->records[0]->id->value;
+    
+  if(isset($return_id) && $return_id != ''){
+    echo $contact_id = $return_id;
+    echo 'Found';
+
+  }else{
+    
+    //Create New Contacts Entry
+    $set_entry_parameters_cont = array(      
+      "session" => $session_id,
+      "module_name" => "Contacts",  
+      //Record attributes
+      "name_value_list" => array(  
+          array("name" => "contact_type_c", "value" => "Student"),
+          array("name" => "status", "value" => "Active Student"), 
+          array("name" => "number_of_courses_c", "value" => count($courses)),
+          array("name" => "currency_id", "value" => "USD"),          
+          array("name" => "primary_address_street", "value" => $profile->commerce_customer_address['und'][0]['thoroughfare'] . $profile->commerce_customer_address['und'][0]['premise']),          
+          array("name" => "primary_address_city", "value" => $profile->commerce_customer_address['und'][0]['locality']),
+          array("name" => "primary_address_state", "value" => $profile->commerce_customer_address['und'][0]['administrative_area']),          
+          array("name" => "primary_address_postalcode", "value" => $profile->commerce_customer_address['und'][0]['postal_code']),          
+          array("name" => "first_name", "value" => $profile->commerce_customer_address['und'][0]['first_name']),
+          array("name" => "last_name", "value" => $profile->commerce_customer_address['und'][0]['last_name']),
+          array("name" => "phone_work", "value" => $profile->field_contact_phone_number['und'][0]['value']),
+          array("name" => "email1", "value" => $wrapper->field_email_address->value()),
+          array("name" => "description", "value" => $extra_info),
+		  array("name" => "assigned_user_id", "value" => $user_id),              
+          
+        ),
+    );
+      $set_entry_result_cont = sugarapi_call("set_entry", $set_entry_parameters_cont, SUGAR_URL);
+      $contact_id = $set_entry_result_cont->id;
+      echo 'Not Found';
+    }
+
+
+    
+
+    /*$set_relationship_parameters = array(    
+      'session' => $session_id,    
+      'module_name' => 'Contacts',      
+      'module_id' => $contact_id,          
+      'link_field_name' => 'assigned_user',      
+      'related_ids' => array($user_id),     
+     );      
+    $set_relationship_result = sugarapi_call("set_relationship", $set_relationship_parameters, SUGAR_URL);*/
+  
+
+  //die(); 
+  
+  //Find Account
+  if ($account_name){
+    $account = sugarapi_get_partner($session_id, $account_name);
+    $account_id = $account->records[0]->id->value;  
+    
     //Relate new Student to existing Partner Record 
     //Set Related Partner Field
     $set_relationship_parameters = array(    
-      'session' => $session_id,
-      //The name of the module.
-      'module_name' => 'Accounts',
-      //The ID of the specified module bean. ***
-      'module_id' => $account_id,
-      //The relationship name of the linked field from which to relate records.    
-      'link_field_name' => 'contacts',
-      //The list of record ids to relate
+      'session' => $session_id,    
+      'module_name' => 'Accounts',      
+      'module_id' => $account_id,          
+      'link_field_name' => 'contacts',      
       'related_ids' => array($contact_id),     
       );      
      $set_relationship_result = sugarapi_call("set_relationship", $set_relationship_parameters, SUGAR_URL);
-	 
-	 //Create Opportunity
-		$set_entry_parameters_opp = array(      
-		"session" => $session_id,
-		"module_name" => "Opportunities",
-		
-		//Record attributes
-		"name_value_list" => array(  
-			array("name" => "name", "value" => $profile->commerce_customer_address['und'][0]['first_name'].'_'.$profile->commerce_customer_address['und'][0]['last_name'].'_'.date('Y-m-d', $wrapper->field_start_date->value())),
-			
-			array("name" => "sales_stage", "value" => "Closed Won"), 
-			array("name" => "number_of_courses_c", "value" => count($courses)),
-			array("name" => "currency_id", "value" => "USD"),
-			),
-		);
-		$set_entry_result_opp = sugarapi_call("set_entry", $set_entry_parameters_opp, SUGAR_URL);
-		echo 'RR<BR>';
-		echo $opportunity_id = $set_entry_result_opp->id;
-		
-		//Create Contacts+Opportunity Relatonship    
-      	$set_entry_parameters = array(
-        //session id
-        "session" => $session_id,
-		 //The name of the module.
-		'module_name' => 'Opportunities',
-		//The ID of the specified module bean.
-		'module_id' => $opportunity_id,
-		//The relationship name of the linked field from which to relate records.
-		'link_field_name' => 'contacts',
-		//The list of record ids to relate
-		'related_ids' => array(
-			$contact_id,
-		),
-		//Sets the value for relationship based fields
-		'name_value_list' => array(
-			array(
-				'name' => 'contact_role',
-				'value' => 'Other'
-			),
-		),
+  }  
+   $program_name = $wrapper->field_program_name->value();
+   $total_cost = $wrapper->field_total_cost->value();
+   //Create Opportunity
+    $set_entry_parameters_opp = array(      
+    "session" => $session_id,
+    "module_name" => "Opportunities",
+    
+    //Record attributes
+    "name_value_list" => array(  
+		  array("name" => "name", "value" => $profile->commerce_customer_address['und'][0]['first_name'].'_'.$profile->commerce_customer_address['und'][0]['last_name'].'_'.date('Y-m-d', $wrapper->field_start_date->value())),
+		  
+		  array("name" => "sales_stage", "value" => "Closed Won"), 
+		  array("name" => "number_of_courses_c", "value" => count($courses)),
+		  array("name" => "currency_id", "value" => "USD"),
+		  //New Addition
+		  array("name" => "program_name_c", "value" => $program_name),
+		  array("name" => "total_cost_c", "value" => $total_cost),
+		  array("name" => "assigned_user_id", "value" => $user_id),   
+      ),
     );
-		$set_relationship_result_opps = sugarapi_call("set_relationship", $set_entry_parameters, SUGAR_URL);
-		
-		//Create Opportunity+Account Relationship
-		$set_entry_parameters_opps_acc = array(
-        //session id
-        "session" => $session_id,
-		 //The name of the module.
-		'module_name' => 'Accounts',
-		//The ID of the specified module bean.
-		'module_id' => $account_id,
-		//The relationship name of the linked field from which to relate records.
-		'link_field_name' => 'opportunities',
-		//The list of record ids to relate
-		'related_ids' => array(
-			$opportunity_id,
-		),
-		//Sets the value for relationship based fields
-		'name_value_list' => array(
-			array(
-				'name' => 'account_role',
-				'value' => 'Other'
-			),
-		),
+    $set_entry_result_opp = sugarapi_call("set_entry", $set_entry_parameters_opp, SUGAR_URL);
+    echo 'RR<BR>';
+    echo $opportunity_id = $set_entry_result_opp->id;
+    
+    //Create Contacts+Opportunity Relatonship    
+      $set_entry_parameters = array(
+          //session id
+          "session" => $session_id,
+       //The name of the module.
+      'module_name' => 'Opportunities',
+      //The ID of the specified module bean.
+      'module_id' => $opportunity_id,
+      //The relationship name of the linked field from which to relate records.
+      'link_field_name' => 'contacts',
+      //The list of record ids to relate
+      'related_ids' => array(
+        $contact_id,
+    ),
+    //Sets the value for relationship based fields
+    'name_value_list' => array(
+      array(
+        'name' => 'contact_role',
+        'value' => 'Other'
+      ),
+    ),
     );
-		$set_relationship_result_opps_acc = sugarapi_call("set_relationship", $set_entry_parameters_opps_acc, SUGAR_URL);
-		//$course_data = array("API9","API 12");
-		$product_start_date = date('Y-m-d H:i:s', $wrapper->field_start_date->value());
-		//If Course Data is present
-		if(isset($courses) && (count($courses) > 0)){
-			//Loop Course Data and Create Course / Relationship
-			for($i=0; $i<count($courses);$i++){
-				$set_entry_parameters = array(
-					//session id
-					"session" => $session_id,
-					 //The name of the module from which to retrieve records.
-					 "module_name" => "Products",
-			
-					 //Record attributes
-					 "name_value_list" => array(
-						  //to update a record, you will nee to pass in a record id as commented below
-						  //array("name" => "id", "value" => "9b170af9-3080-e22b-fbc1-4fea74def88f"),
-						  array("name" => "name", "value" => $courses[$i]),
-						  array("name" => "start_date_c", "value" => $product_start_date),
-					 ),
-				);
-				$set_entry_result_prod = sugarapi_call("set_entry", $set_entry_parameters, SUGAR_URL);
-				$product_id = $set_entry_result_prod->id;
-				
-				//Create Relationship Products+Opportunities
-				$set_entry_parameters = array(
-					'session' => $session_id,
-					'module_name' => 'Products',
-					'module_id' => $product_id,
-					'link_field_name' => 'opportunities_products_1',
-					'related_ids' => array($opportunity_id),
-				);
-				$set_relationship_result_prod_opp = sugarapi_call("set_relationship", $set_entry_parameters, SUGAR_URL);
-				
-				//Create Relationship Products+Contacts
-				$set_entry_parameters_prod_con = array(
-					'session' => $session_id,
-					'module_name' => 'Contacts',
-					'module_id' => $contact_id,
-					'link_field_name' => 'contacts_products_1',
-					'related_ids' => array($product_id),
-				);
-				$set_relationship_result_prod_con = sugarapi_call("set_relationship", $set_entry_parameters_prod_con, SUGAR_URL);
-			}//End of FOR
-		}//End of IF
+    $set_relationship_result_opps = sugarapi_call("set_relationship", $set_entry_parameters, SUGAR_URL);
+    
+    
+    if ($account_name){      
+      $set_entry_parameters_opps_acc = array(        
+        "session" => $session_id,         
+        'module_name' => 'Accounts',        
+        'module_id' => $account_id,        
+        'link_field_name' => 'opportunities',        
+        'related_ids' => array(
+          $opportunity_id,
+      ),
+      'name_value_list' => array(
+          array(
+            'name' => 'account_role',
+            'value' => 'Other'
+          ),
+        ),
+      );
+      $set_relationship_result_opps_acc = sugarapi_call("set_relationship", $set_entry_parameters_opps_acc, SUGAR_URL);
+   }
+   
+    
+     
+    //$course_data = array("API9","API 12");
+    $product_start_date = date('Y-m-d H:i:s', $wrapper->field_start_date->value());
+    
+    
+    //If Course Data is present
+    /*
+     * $course array has 2 keys
+     * id = Sugar ID / Bean
+     * title = Course title as entered in the Drupal course node
+     */
+    if(isset($courses) && (count($courses) > 0)){
+      //Loop Course Data and Create Course / Relationship
+      for($i=0; $i<count($courses);$i++){
+                
+        // TODO: $product_id = $courses[$i]['id']; this is the Sugar been for this course 
+        
+        $set_entry_parameters = array(
+          //session id
+          "session" => $session_id,
+           //The name of the module from which to retrieve records.
+           "module_name" => "Products",
+      
+           //Record attributes
+           "name_value_list" => array(
+              //to update a record, you will nee to pass in a record id as commented below
+              //array("name" => "id", "value" => "9b170af9-3080-e22b-fbc1-4fea74def88f"),
+              // TODO: NOTE: use array("name" => "name", "value" => $courses[$i]['id]), to access the sugar bean for this course
+              array("name" => "name", "value" => $courses[$i]['title']),
+              array("name" => "start_date_c", "value" => $product_start_date),
+			  array("name" => "assigned_user_id", "value" => $user_id), 
+           ),
+        );
+        $set_entry_result_prod = sugarapi_call("set_entry", $set_entry_parameters, SUGAR_URL);
+        $product_id = $set_entry_result_prod->id;
+        
+        //Create Relationship Products+Opportunities
+        $set_entry_parameters = array(
+          'session' => $session_id,
+          'module_name' => 'Products',
+          'module_id' => $product_id,
+          'link_field_name' => 'opportunities_products_1',
+          'related_ids' => array($opportunity_id),
+        );
+        $set_relationship_result_prod_opp = sugarapi_call("set_relationship", $set_entry_parameters, SUGAR_URL);
+        
+        //Create Relationship Products+Contacts
+        $set_entry_parameters_prod_con = array(
+          'session' => $session_id,
+          'module_name' => 'Contacts',
+          'module_id' => $contact_id,
+          'link_field_name' => 'contacts_products_1',
+          'related_ids' => array($product_id),
+        );
+        $set_relationship_result_prod_con = sugarapi_call("set_relationship", $set_entry_parameters_prod_con, SUGAR_URL);
+        
+      }//End of FOR
+    }//End of IF
 }//END sugar_connect
 
 
-
-
-// NOTE: This routine is not used right now, but may use something similar in the futer
-// to lookup existing records
 function sugarapi_get_partner($session_id, $partner_name){
-   $get_entry_parameters = array(     
+   $get_entry_parameters = array(
      'session' => $session_id,
 
-     //The string to search for.
+        //The string to search for.
         'search_string' => $partner_name,
 
         //The list of modules to query.
@@ -411,7 +395,7 @@ function sugarapi_get_contact($session_id, $contact_email){
         'favorites' => false
     );
     $result = sugarapi_call("search_by_module", $get_entry_parameters, SUGAR_URL);
-    
+     
     if (empty($result->entry_list)){
       return FALSE;
     }else{
@@ -419,22 +403,39 @@ function sugarapi_get_contact($session_id, $contact_email){
     }   
 }
 
-//NOTE: Add relationship
-function create_relationship($session_id, $account_id, $contact_id, $url){
-	$set_entry_parameters = array(
-		'session' => $session_id,
-		'module_name' => 'Accounts',
-		'module_id' => $account_id,
-		'link_field_name' => 'contacts',
-		'related_ids' => array($contact_id),
-	);
-	$result = sugarapi_call("set_relationship", $set_entry_parameters, $url);
+// NOTE: This routine used to find an existing user by first and last name
+function sugarapi_get_user($session_id, $first_name, $last_name){
+   
+   $get_entry_parameters = array(     
+     'session' => $session_id,
+      //The string to search for.
+        'search_string' => $last_name,
+        'modules' => array(
+          'Employees',
+        ),        
+        'offset' => 0,
+        'max_results' => 2,
+        'id' => '',
+        'select_fields' => array(
+            'id',
+            'first_name',
+            'last_name',                 
+        ),
+        'unified_search_only' => false,
+        'favorites' => false
+    );
+    $result = sugarapi_call("search_by_module", $get_entry_parameters, SUGAR_URL);
     
     if (empty($result->entry_list)){
       return FALSE;
     }else{
-      return $result->entry_list[0];
-    }
+      foreach ($result->entry_list[0]->records as $key => $value){
+          if ($value->first_name->value == $first_name) return $value->id->value;
+      }             
+      return FALSE;
+    }   
 }
+
+
 
 
