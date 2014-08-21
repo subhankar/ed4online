@@ -58,21 +58,22 @@ function sugarapi_call($method, $parameters, $url)
     return $response;
 }
 
-function sugarapi_connect($wrapper, $profile, $courses, $user, $account_name, $assigned_to){
-	/*echo '<PRE>';
+function sugarapi_connect($wrapper, $profile, $courses, $user, $account_name, $assigned_to){	
+  $login_result = sugarapi_meni_login();  
+  $session_id = $login_result->id;
+  
+  	/*echo '<PRE>';
 	print_r($courses);
 	echo '</PRE>';
-	echo 'Total Cost '.$wrapper->field_total_cost->value();	
-	echo '<BR>';
-	echo 'Program Name '.$wrapper->field_program_name->value();
-	echo '<BR>';
-	die()*/;
-  $login_result = sugarapi_meni_login();    
+	$prod_cat = sugarapi_get_product_catalog($session_id,'4a4602b4-a0a0-bf87-bed4-51d736d1ebcb');
+	echo '<PRE>';
+	print_r($prod_cat);
+	echo '</PRE>';
+	$account = sugarapi_get_partner($session_id, 'Approved Colleges');
     echo '<PRE>';
-  //print_r($wrapper);
-  echo '</PRE>';
-  //die();
-  $session_id = $login_result->id;
+	print_r($account);
+	echo '</PRE>';
+	die();*/
 
   //Create New Student Record----------------------------------------------
     
@@ -269,7 +270,16 @@ function sugarapi_connect($wrapper, $profile, $courses, $user, $account_name, $a
       //Loop Course Data and Create Course / Relationship
       for($i=0; $i<count($courses);$i++){
                 
-        // TODO: $product_id = $courses[$i]['id']; this is the Sugar been for this course 
+        // TODO: $product_id = $courses[$i]['id']; this is the Sugar been for this course
+		//Find by Product Catalog Id 
+		$prod_cat = sugarapi_get_product_catalog($session_id,$courses[$i]['id']);
+		
+		$prod_cost_price = $prod_cat->name_value_list->cost_price->value;
+		$prod_discount_price = $prod_cat->name_value_list->discount_price->value;
+		$prod_list_price = $prod_cat->name_value_list->list_price->value;
+		$prod_tax_class = $prod_cat->name_value_list->tax_class->value;
+		$prod_description = $prod_cat->name_value_list->description->value;
+		$prod_support_term = $prod_cat->name_value_list->support_term->value;
         
         $set_entry_parameters = array(
           //session id
@@ -284,11 +294,32 @@ function sugarapi_connect($wrapper, $profile, $courses, $user, $account_name, $a
               // TODO: NOTE: use array("name" => "name", "value" => $courses[$i]['id]), to access the sugar bean for this course
               array("name" => "name", "value" => $courses[$i]['title']),
               array("name" => "start_date_c", "value" => $product_start_date),
-			  array("name" => "assigned_user_id", "value" => $user_id), 
+			  array("name" => "assigned_user_id", "value" => $user_id),
+			  //Newly Added fields
+			  array("name" => "cost_price", "value" => $prod_cost_price),
+			  array("name" => "cost_usdollar", "value" => $prod_cost_price),			  
+			  array("name" => "discount_price", "value" => $prod_discount_price),
+			  array("name" => "discount_usdollar", "value" => $prod_discount_price),			  
+			  array("name" => "list_price", "value" => $prod_list_price),
+			  array("name" => "list_usdollar", "value" => $prod_list_price),			  
+			  array("name" => "tax_class", "value" => $prod_tax_class),
+			  array("name" => "description", "value" => $prod_description),			  
+			  array("name" => "support_term", "value" => $prod_support_term),
            ),
         );
         $set_entry_result_prod = sugarapi_call("set_entry", $set_entry_parameters, SUGAR_URL);
         $product_id = $set_entry_result_prod->id;
+		/*Create Rel b/w Product & Prod Catalog*/
+		$set_entry_parameters_prod_cat = array(
+          'session' => $session_id,
+          'module_name' => 'Products',
+          'module_id' => $product_id,
+          'link_field_name' => 'products_producttemplates_1',
+          'related_ids' => array($courses[$i]['id']),
+        );
+		$set_relationship_result_prod_cat = sugarapi_call("set_relationship", $set_entry_parameters_prod_cat, SUGAR_URL);
+		
+		/*End Rel b/w Product & Prod Catalog*/
         
         //Create Relationship Products+Opportunities
         $set_entry_parameters = array(
@@ -357,6 +388,43 @@ function sugarapi_get_partner($session_id, $partner_name){
     }else{
       return $result->entry_list[0];
     }   
+}
+
+//Note: This function used to find out details from Product Catalog
+function sugarapi_get_product_catalog($session_id,$product_catalog_id){
+   $get_entries_parameters = array(
+
+         //session id
+         'session' => $session_id,
+         //The name of the module from which to retrieve records
+         'module_name' => 'ProductTemplates',
+         //An array of SugarBean IDs
+         'id' => $product_catalog_id,
+         //Optional. The list of fields to be returned in the results
+         'select_fields' => array(
+            'cost_price',
+            'discount_price',
+            'list_price',
+			'tax_class',
+			'description',
+			'support_term',
+         ),
+
+         //A list of link names and the fields to be returned for each link name
+         'link_name_to_fields_array' => array(
+         ),
+		 //Flag the record as a recently viewed item
+		 'track_view' => true,
+    );
+    $get_entries_result = sugarapi_call("get_entry", $get_entries_parameters, SUGAR_URL);
+	
+	return $get_entries_result->entry_list[0];
+    
+    /*if (empty($result->entry_list)){
+      return FALSE;
+    }else{
+      return $result->entry_list[0];
+    }*/   
 }
 // NOTE: This routine used to find any existing Contact by Email ID
 function sugarapi_get_contact($session_id, $contact_email){
